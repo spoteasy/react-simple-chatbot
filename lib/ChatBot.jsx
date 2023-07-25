@@ -264,8 +264,11 @@ class ChatBot extends Component {
     } else if (currentStep.options && data) {
       const option = currentStep.options.filter(o => o.value === data.value)[0];
       const trigger = this.getTriggeredStep(option.trigger, currentStep.value);
-      const stepOptions = currentStep.options;
+      const stepOptions = { ...currentStep.options };
+      console.log(currentStep.options, 'currentStep.options');
       delete currentStep.options;
+
+      console.log(stepOptions, 'stepOptions');
 
       // replace choose option for user message
       currentStep = Object.assign({}, currentStep, option, defaultUserSettings, {
@@ -274,6 +277,8 @@ class ChatBot extends Component {
         trigger,
         stepOptions
       });
+
+      console.log(currentStep, 'currentStep');
 
       renderedSteps.pop();
       previousSteps.pop();
@@ -286,6 +291,7 @@ class ChatBot extends Component {
         previousSteps
       });
     } else if (currentStep.trigger) {
+      console.log('currentStep.trigger');
       if (currentStep.replace) {
         renderedSteps.pop();
       }
