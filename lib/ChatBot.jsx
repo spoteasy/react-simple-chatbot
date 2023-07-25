@@ -18,7 +18,7 @@ import {
 } from './components';
 import Recognition from './recognition';
 import { ChatIcon, CloseIcon, SubmitIcon, MicIcon } from './icons';
-import { isMobile } from './utils';
+import { isMobile, mapObject } from './utils';
 import { speakFn } from './speechSynthesis';
 
 class ChatBot extends Component {
@@ -264,13 +264,15 @@ class ChatBot extends Component {
     } else if (currentStep.options && data) {
       const option = currentStep.options.filter(o => o.value === data.value)[0];
       const trigger = this.getTriggeredStep(option.trigger, currentStep.value);
+      const stepOptions = currentStep.options;
       delete currentStep.options;
 
       // replace choose option for user message
       currentStep = Object.assign({}, currentStep, option, defaultUserSettings, {
         user: true,
         message: option.label,
-        trigger
+        trigger,
+        stepOptions
       });
 
       renderedSteps.pop();
@@ -445,6 +447,7 @@ class ChatBot extends Component {
   submitUserMessage = () => {
     const { defaultUserSettings, inputValue, previousSteps, renderedSteps } = this.state;
     let { currentStep } = this.state;
+    console.log(currentStep, 'currentStep 11111');
 
     const isInvalid = currentStep.validator && this.checkInvalidInput();
 
@@ -647,6 +650,9 @@ class ChatBot extends Component {
       width,
       height
     } = this.props;
+
+    console.log(this.state.renderedSteps, 'renderedSteps');
+    console.log(this.state.previousSteps, 'previousSteps');
 
     const header = headerComponent || (
       <Header className="rsc-header">

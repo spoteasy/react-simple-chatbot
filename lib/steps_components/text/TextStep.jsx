@@ -29,7 +29,6 @@ class TextStep extends Component {
     setTimeout(() => {
       this.setState({ loading: false }, () => {
         if (!isComponentWatingUser && !step.rendered) {
-          console.log(step, 'step');
           if (step.triggerConfig) {
             triggerNextStep({ triggerConfig: step.triggerConfig });
           } else {
@@ -42,8 +41,8 @@ class TextStep extends Component {
   }
 
   get options() {
-    const { previousStep } = this.props;
-    return previousStep && previousStep.options;
+    const { step } = this.props;
+    return step.stepOptions;
   }
 
   getMessage = () => {
@@ -138,7 +137,6 @@ class TextStep extends Component {
             }}
           />
 
-
           <CheckCircleIcon
             color="#474747"
             size={26}
@@ -149,7 +147,6 @@ class TextStep extends Component {
                 isEditing: false
               });
             }}
-
           />
         </div>
       );
