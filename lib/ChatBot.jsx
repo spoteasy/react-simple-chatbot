@@ -525,6 +525,30 @@ class ChatBot extends Component {
     }
   };
 
+  updateStep = (stepId, stepFields, stepValues) => {
+    const { previousSteps, renderedSteps } = this.state;
+    const mapFn = item => {
+      if (stepId === item.id) {
+        const newObj = { ...item };
+
+        stepFields.forEach((key, index) => {
+          newObj[key] = stepValues[index];
+        });
+
+        return newObj;
+      }
+
+      return item;
+    };
+    const nextPreviousSteps = previousSteps.map(mapFn);
+    const nextRenderedSteps = renderedSteps.map(mapFn);
+
+    this.setState({
+      previousSteps: nextPreviousSteps,
+      renderedSteps: nextRenderedSteps
+    });
+  };
+
   renderStep = (step, index) => {
     const { renderedSteps } = this.state;
     const {
@@ -551,6 +575,7 @@ class ChatBot extends Component {
           previousStep={previousStep}
           previousValue={previousStep.value}
           triggerNextStep={this.triggerNextStep}
+          updateStep={this.updateStep}
         />
       );
     }
@@ -583,6 +608,8 @@ class ChatBot extends Component {
         speechSynthesis={speechSynthesis}
         isFirst={this.isFirstPosition(step)}
         isLast={this.isLastPosition(step)}
+        updateStep={this.updateStep}
+        bubbleOptionStyle={bubbleOptionStyle}
       />
     );
   };

@@ -23,14 +23,15 @@ class CustomStep extends Component {
   }
 
   renderComponent = () => {
-    const { step, steps, previousStep, triggerNextStep } = this.props;
+    const { step, steps, previousStep, triggerNextStep, updateStep } = this.props;
     const { component } = step;
 
     return React.cloneElement(component, {
       step,
       steps,
       previousStep,
-      triggerNextStep
+      triggerNextStep,
+      updateStep
     });
   };
 
@@ -59,7 +60,8 @@ CustomStep.propTypes = {
   step: PropTypes.objectOf(PropTypes.any).isRequired,
   steps: PropTypes.objectOf(PropTypes.any).isRequired,
   style: PropTypes.objectOf(PropTypes.any).isRequired,
-  triggerNextStep: PropTypes.func.isRequired
+  triggerNextStep: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired
 };
 CustomStep.defaultProps = {
   previousValue: '',
