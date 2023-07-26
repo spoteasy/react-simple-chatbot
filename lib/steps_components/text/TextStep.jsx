@@ -117,8 +117,6 @@ class TextStep extends Component {
         .map(key => this.options[key])
         .map(this.renderOption);
     }
-    // import XCircleIcon from '../../icons/XCircleIcon';
-    // import CheckCircleIcon from '../../icons/CheckCircleIcon';
 
     if (isEditing) {
       return (
