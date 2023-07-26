@@ -176,6 +176,23 @@ class ChatBot extends Component {
     const { currentTarget: target } = event;
     const { enableSmoothScroll } = this.props;
 
+    let classList =
+      event.target.classList &&
+      event.target.classList.contains &&
+      event.target.classList.contains('ignore-auto-scroll');
+
+    if (!classList) {
+      classList =
+        event.target.parentNode &&
+        event.target.parentNode.classList &&
+        event.target.parentNode.classList.contains &&
+        event.target.parentNode.classList.contains('ignore-auto-scroll');
+    }
+
+    if (classList) {
+      return null;
+    }
+
     if (enableSmoothScroll && this.supportsScrollBehavior) {
       target.scroll({
         top: target.scrollHeight,
@@ -264,11 +281,8 @@ class ChatBot extends Component {
     } else if (currentStep.options && data) {
       const option = currentStep.options.filter(o => o.value === data.value)[0];
       const trigger = this.getTriggeredStep(option.trigger, currentStep.value);
-      const stepOptions = { ...currentStep.options };
-      console.log(currentStep.options, 'currentStep.options');
+      const stepOptions = currentStep.options;
       delete currentStep.options;
-
-      console.log(stepOptions, 'stepOptions');
 
       // replace choose option for user message
       currentStep = Object.assign({}, currentStep, option, defaultUserSettings, {
@@ -277,8 +291,6 @@ class ChatBot extends Component {
         trigger,
         stepOptions
       });
-
-      console.log(currentStep, 'currentStep');
 
       renderedSteps.pop();
       previousSteps.pop();
@@ -291,7 +303,6 @@ class ChatBot extends Component {
         previousSteps
       });
     } else if (currentStep.trigger) {
-      console.log('currentStep.trigger');
       if (currentStep.replace) {
         renderedSteps.pop();
       }

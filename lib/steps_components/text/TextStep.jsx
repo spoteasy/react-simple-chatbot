@@ -72,10 +72,10 @@ class TextStep extends Component {
           type="text"
           onChange={e => this.setState({ editingMessage: e.target.value })}
           value={editingMessage}
-          className="edit-input"
+          className="edit-input ignore-auto-scroll"
           style={{
             width: '100px',
-            display: 'flex',
+            display: 'flex'
           }}
         />
       );
@@ -90,7 +90,7 @@ class TextStep extends Component {
     const { value, label } = option;
 
     return (
-      <Option key={value} className="rsc-os-option">
+      <Option key={value} className="rsc-os-option ignore-auto-scroll">
         <OptionElement
           className="rsc-os-option-element"
           style={bubbleOptionStyle}
@@ -117,10 +117,12 @@ class TextStep extends Component {
         .map(key => this.options[key])
         .map(this.renderOption);
     }
+    // import XCircleIcon from '../../icons/XCircleIcon';
+    // import CheckCircleIcon from '../../icons/CheckCircleIcon';
 
     if (isEditing) {
       return (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }} className="ignore-auto-scroll">
           <XCircleIcon
             color="#474747"
             size={26}
@@ -152,12 +154,16 @@ class TextStep extends Component {
 
     return (
       <PencilIcon
+        className="ignore-auto-scroll"
         style={{
           cursor: 'pointer',
           marginRight: '8px'
         }}
         color="#474747"
-        onClick={() => this.setState({ isEditing: true })}
+        onClick={() => {
+          console.log(this.props, 'this.props');
+          this.setState({ isEditing: true });
+        }}
       />
     );
   };
@@ -207,7 +213,7 @@ class TextStep extends Component {
         </div>
         {isEditing && this.options ? null : (
           <Bubble
-            className="rsc-ts-bubble"
+            className="rsc-ts-bubble ignore-auto-scroll"
             style={bubbleStyle}
             user={user}
             showAvatar={showAvatar}
@@ -242,7 +248,7 @@ TextStep.propTypes = {
   steps: PropTypes.objectOf(PropTypes.any),
   triggerNextStep: PropTypes.func.isRequired,
   bubbleOptionStyle: PropTypes.objectOf(PropTypes.any).isRequired,
-  updateStep: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired
 };
 
 TextStep.defaultProps = {
