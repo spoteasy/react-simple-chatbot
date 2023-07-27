@@ -12,7 +12,6 @@ const Input = styled.input`
   border-radius: 0;
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
-  border-top: ${props => (props.invalid ? '0' : '1px solid #eee')};
   box-shadow: ${props => (props.invalid ? 'inset 0 0 2px #E53935' : 'none')};
   box-sizing: border-box;
   color: ${props => (props.invalid ? '#E53935' : '')};

@@ -9,16 +9,12 @@ import Option from '../options/Option';
 import OptionElement from '../options/OptionElement';
 import PencilIcon from '../../icons/PencilIcon';
 import XCircleIcon from '../../icons/XCircleIcon';
-import CheckCircleIcon from '../../icons/CheckCircleIcon';
 
 class TextStep extends Component {
   /* istanbul ignore next */
   state = {
     loading: true,
-    isEditing: false,
-    editingMessage: this.props.step.message
-      ? this.props.step.message.replace(/{previousValue}/g, this.props.previousValue)
-      : ''
+    isEditing: false
   };
 
   componentDidMount() {
@@ -53,7 +49,6 @@ class TextStep extends Component {
   };
 
   renderMessage = () => {
-    const { isEditing, editingMessage } = this.state;
     const { step, steps, previousStep, triggerNextStep } = this.props;
     const { component } = step;
 
@@ -64,21 +59,6 @@ class TextStep extends Component {
         previousStep,
         triggerNextStep
       });
-    }
-
-    if (isEditing) {
-      return (
-        <input
-          type="text"
-          onChange={e => this.setState({ editingMessage: e.target.value })}
-          value={editingMessage}
-          className="edit-input ignore-auto-scroll"
-          style={{
-            width: '100px',
-            display: 'flex'
-          }}
-        />
-      );
     }
 
     return this.getMessage();
@@ -109,43 +89,27 @@ class TextStep extends Component {
   };
 
   renderButton = () => {
-    const { updateStep, step, previousValue } = this.props;
-    const { isEditing, editingMessage } = this.state;
+    const { step, setEditingStepId, editingStepId } = this.props;
+    const { isEditing } = this.state;
 
     if (isEditing && this.options) {
       return Object.keys(this.options)
         .map(key => this.options[key])
         .map(this.renderOption);
     }
-    // import XCircleIcon from '../../icons/XCircleIcon';
-    // import CheckCircleIcon from '../../icons/CheckCircleIcon';
 
-    if (isEditing) {
+    if (editingStepId && editingStepId === step.id) {
       return (
-        <div style={{ display: 'flex', alignItems: 'center' }} className="ignore-auto-scroll">
+        <div
+          style={{ display: 'flex', alignItems: 'center', padding: '6px 0 6px 0' }}
+          className="ignore-auto-scroll"
+        >
           <XCircleIcon
             color="#474747"
-            size={26}
+            size={28}
             style={{ cursor: 'pointer', marginRight: '4px' }}
             onClick={() => {
-              this.setState({
-                isEditing: false,
-                editingMessage: step.message
-                  ? step.message.replace(/{previousValue}/g, previousValue)
-                  : ''
-              });
-            }}
-          />
-
-          <CheckCircleIcon
-            color="#474747"
-            size={26}
-            style={{ cursor: 'pointer', marginRight: '8px' }}
-            onClick={() => {
-              updateStep(step.id, ['message', 'value'], [editingMessage, editingMessage]);
-              this.setState({
-                isEditing: false
-              });
+              setEditingStepId('');
             }}
           />
         </div>
@@ -153,18 +117,26 @@ class TextStep extends Component {
     }
 
     return (
-      <PencilIcon
+      <div
+        style={{ display: 'flex', alignItems: 'center', padding: '6px 0 6px 0' }}
         className="ignore-auto-scroll"
-        style={{
-          cursor: 'pointer',
-          marginRight: '8px'
-        }}
-        color="#474747"
-        onClick={() => {
-          console.log(this.props, 'this.props');
-          this.setState({ isEditing: true });
-        }}
-      />
+      >
+        <PencilIcon
+          className="ignore-auto-scroll"
+          style={{
+            cursor: 'pointer',
+            marginRight: '8px'
+          }}
+          color="#474747"
+          onClick={() => {
+            if (this.options) {
+              return this.setState({ isEditing: true });
+            }
+
+            return setEditingStepId(step.id);
+          }}
+        />
+      </div>
     );
   };
 
@@ -248,7 +220,9 @@ TextStep.propTypes = {
   steps: PropTypes.objectOf(PropTypes.any),
   triggerNextStep: PropTypes.func.isRequired,
   bubbleOptionStyle: PropTypes.objectOf(PropTypes.any).isRequired,
-  updateStep: PropTypes.func.isRequired
+  updateStep: PropTypes.func.isRequired,
+  setEditingStepId: PropTypes.func.isRequired,
+  editingStepId: PropTypes.string.isRequired
 };
 
 TextStep.defaultProps = {

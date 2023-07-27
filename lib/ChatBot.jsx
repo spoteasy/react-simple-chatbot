@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import styled from 'styled-components';
 import Random from 'random-id';
 import { CustomStep, OptionsStep, TextStep } from './steps_components';
 import schema from './schemas/schema';
@@ -18,8 +19,13 @@ import {
 } from './components';
 import Recognition from './recognition';
 import { ChatIcon, CloseIcon, SubmitIcon, MicIcon } from './icons';
-import { isMobile, mapObject } from './utils';
+import { isMobile } from './utils';
 import { speakFn } from './speechSynthesis';
+import PencilIcon from './icons/PencilIcon';
+
+const InputContainer = styled.div`
+  border-top: ${props => (props.invalid ? '0' : '1px solid #eee')};
+`;
 
 class ChatBot extends Component {
   /* istanbul ignore next */
@@ -51,7 +57,9 @@ class ChatBot extends Component {
       inputInvalid: false,
       speaking: false,
       recognitionEnable: props.recognitionEnable && Recognition.isSupported(),
-      defaultUserSettings: {}
+      defaultUserSettings: {},
+      editingStepId: '',
+      editingStepText: ''
     };
 
     this.speak = speakFn(props.speechSynthesis);
@@ -222,6 +230,12 @@ class ChatBot extends Component {
   };
 
   onValueChange = event => {
+    const { editingStepId } = this.state;
+
+    if (editingStepId) {
+      return this.setState({ editingStepText: event.target.value });
+    }
+
     this.setState({ inputValue: event.target.value });
   };
 
@@ -258,10 +272,14 @@ class ChatBot extends Component {
 
   triggerNextStep = data => {
     const { enableMobileAutoFocus } = this.props;
-    const { defaultUserSettings, previousSteps, renderedSteps, steps } = this.state;
+    const { defaultUserSettings, previousSteps, renderedSteps, steps, editingStepId } = this.state;
 
     let { currentStep, previousStep } = this.state;
     const isEnd = currentStep.end;
+
+    if (editingStepId) {
+      this.setState({ editingStepId: '', editingStepText: '' });
+    }
 
     if (data && data.value) {
       currentStep.value = data.value;
@@ -462,13 +480,29 @@ class ChatBot extends Component {
   };
 
   submitUserMessage = () => {
-    const { defaultUserSettings, inputValue, previousSteps, renderedSteps } = this.state;
-    let { currentStep } = this.state;
-    console.log(currentStep, 'currentStep 11111');
+    const {
+      defaultUserSettings,
+      inputValue,
+      previousSteps,
+      renderedSteps,
+      editingStepId,
+      editingStepText
+    } = this.state;
+    let currentStep = editingStepId
+      ? renderedSteps.find(item => item.id === editingStepId)
+      : this.state.currentStep;
 
     const isInvalid = currentStep.validator && this.checkInvalidInput();
 
     if (!isInvalid) {
+      if (editingStepId) {
+        this.updateStep(editingStepId, ['message', 'value'], [editingStepText, editingStepText]);
+        return this.setState({
+          editingStepText: '',
+          editingStepId: ''
+        });
+      }
+
       const step = {
         message: inputValue,
         value: inputValue
@@ -497,15 +531,22 @@ class ChatBot extends Component {
   };
 
   checkInvalidInput = () => {
+    // @TODO DEBUG
     const { enableMobileAutoFocus } = this.props;
-    const { currentStep, inputValue } = this.state;
-    const result = currentStep.validator(inputValue);
+    const { inputValue, editingStepId, editingStepText, renderedSteps } = this.state;
+    const currentStep = editingStepId
+      ? renderedSteps.find(item => item.id === editingStepId)
+      : this.state.currentStep;
+
+    const result = currentStep.validator(editingStepId ? editingStepText : inputValue);
     const value = inputValue;
+
+    const inputValueName = editingStepId ? 'editingStepText' : 'inputValue';
 
     if (typeof result !== 'boolean' || !result) {
       this.setState(
         {
-          inputValue: result.toString(),
+          [inputValueName]: result.toString(),
           inputInvalid: true,
           disabled: true
         },
@@ -513,7 +554,7 @@ class ChatBot extends Component {
           setTimeout(() => {
             this.setState(
               {
-                inputValue: value,
+                [inputValueName]: value,
                 inputInvalid: false,
                 disabled: false
               },
@@ -569,8 +610,20 @@ class ChatBot extends Component {
     });
   };
 
-  renderStep = (step, index) => {
+  setEditingStepId = id => {
     const { renderedSteps } = this.state;
+
+    if (!id) {
+      return this.setState({ editingStepId: '', editingStepText: '' });
+    }
+
+    const step = renderedSteps.find(item => item.id === id);
+    const editingStepText = step.value;
+    return this.setState({ editingStepId: id, editingStepText });
+  };
+
+  renderStep = (step, index) => {
+    const { renderedSteps, editingStepId } = this.state;
     const {
       avatarStyle,
       bubbleStyle,
@@ -630,6 +683,8 @@ class ChatBot extends Component {
         isLast={this.isLastPosition(step)}
         updateStep={this.updateStep}
         bubbleOptionStyle={bubbleOptionStyle}
+        setEditingStepId={this.setEditingStepId}
+        editingStepId={editingStepId}
       />
     );
   };
@@ -643,7 +698,9 @@ class ChatBot extends Component {
       opened,
       renderedSteps,
       speaking,
-      recognitionEnable
+      recognitionEnable,
+      editingStepId,
+      editingStepText
     } = this.state;
     const {
       className,
@@ -667,9 +724,6 @@ class ChatBot extends Component {
       width,
       height
     } = this.props;
-
-    console.log(this.state.renderedSteps, 'renderedSteps');
-    console.log(this.state.previousSteps, 'previousSteps');
 
     const header = headerComponent || (
       <Header className="rsc-header">
@@ -734,21 +788,37 @@ class ChatBot extends Component {
           </Content>
           <Footer className="rsc-footer" style={footerStyle}>
             {!currentStep.hideInput && (
-              <Input
-                type="textarea"
-                style={inputStyle}
-                ref={this.setInputRef}
-                className="rsc-input"
-                placeholder={inputInvalid ? '' : inputPlaceholder}
-                onKeyPress={this.handleKeyPress}
-                onChange={this.onValueChange}
-                value={inputValue}
-                floating={floating}
+              <InputContainer
+                style={{ display: 'flex', alignItems: 'center', backgroundColor: 'white' }}
                 invalid={inputInvalid}
-                disabled={disabled}
-                hasButton={!hideSubmitButton}
-                {...inputAttributesOverride}
-              />
+              >
+                {editingStepId && (
+                  <PencilIcon
+                    size={24}
+                    className="ignore-auto-scroll"
+                    style={{
+                      marginRight: '2px',
+                      marginLeft: '8px'
+                    }}
+                    color="#7a7a7a"
+                  />
+                )}
+                <Input
+                  type="textarea"
+                  style={inputStyle}
+                  ref={this.setInputRef}
+                  className="rsc-input"
+                  placeholder={inputInvalid ? '' : inputPlaceholder}
+                  onKeyPress={this.handleKeyPress}
+                  onChange={this.onValueChange}
+                  value={editingStepId ? editingStepText : inputValue}
+                  floating={floating}
+                  invalid={inputInvalid}
+                  disabled={(disabled && !editingStepId) || inputInvalid}
+                  hasButton={!hideSubmitButton}
+                  {...inputAttributesOverride}
+                />
+              </InputContainer>
             )}
             <div style={controlStyle} className="rsc-controls">
               {!currentStep.hideInput && !currentStep.hideExtraControl && customControl}
@@ -758,7 +828,7 @@ class ChatBot extends Component {
                   style={submitButtonStyle}
                   onClick={this.handleSubmitButton}
                   invalid={inputInvalid}
-                  disabled={disabled}
+                  disabled={disabled && !editingStepId}
                   speaking={speaking}
                 >
                   {icon}
