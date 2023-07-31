@@ -151,7 +151,7 @@ class TextStep extends Component {
       hideUserAvatar
     } = this.props;
     const { loading, isEditing } = this.state;
-    const { avatar, user, botName } = step;
+    const { avatar, user, botName, editable = true } = step;
 
     const showAvatar = user ? !hideUserAvatar : !hideBotAvatar;
 
@@ -171,18 +171,21 @@ class TextStep extends Component {
             />
           )}
         </ImageContainer>
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            flex: 1,
-            height: '61px'
-          }}
-        >
-          {user && !loading ? this.renderButton() : false}
-        </div>
+        {user && editable && !loading ? (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              flex: 1,
+              height: '61px'
+            }}
+          >
+            {this.renderButton()}
+          </div>
+        ) : (
+          false
+        )}
         {isEditing && this.options ? null : (
           <Bubble
             className="rsc-ts-bubble ignore-auto-scroll"
