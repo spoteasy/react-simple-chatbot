@@ -67,40 +67,12 @@ class ChatBot extends Component {
 
   componentDidMount() {
     const { steps } = this.props;
-    const {
-      botDelay,
-      botAvatar,
-      botName,
-      cache,
-      cacheName,
-      customDelay,
-      enableMobileAutoFocus,
-      userAvatar,
-      userDelay,
-      stepsHistory
-    } = this.props;
+    const { cache, cacheName, enableMobileAutoFocus, stepsHistory } = this.props;
     const chatSteps = {};
-
-    const defaultBotSettings = { delay: botDelay, avatar: botAvatar, botName };
-    const defaultUserSettings = {
-      delay: userDelay,
-      avatar: userAvatar,
-      hideInput: false,
-      hideExtraControl: false
-    };
-    const defaultCustomSettings = { delay: customDelay };
 
     for (let i = 0, len = steps.length; i < len; i += 1) {
       const step = steps[i];
-      let settings = {};
-
-      if (step.user) {
-        settings = defaultUserSettings;
-      } else if (step.message || step.asMessage) {
-        settings = defaultBotSettings;
-      } else if (step.component) {
-        settings = defaultCustomSettings;
-      }
+      const settings = this.getSettings(step);
 
       chatSteps[step.id] = Object.assign({}, settings, schema.parse(step));
     }
@@ -161,7 +133,7 @@ class ChatBot extends Component {
 
       this.setState({
         currentStep: steps[currentStepIndex + 1],
-        defaultUserSettings,
+        defaultUserSettings: this.defaultUserSettings,
         previousStep: history[history.length - 1],
         previousSteps: history,
         renderedSteps: history,
@@ -170,7 +142,7 @@ class ChatBot extends Component {
     } else {
       this.setState({
         currentStep,
-        defaultUserSettings,
+        defaultUserSettings: this.defaultUserSettings,
         previousStep,
         previousSteps,
         renderedSteps,
@@ -195,6 +167,32 @@ class ChatBot extends Component {
       this.content.removeEventListener('DOMNodeInserted', this.onNodeInserted);
       window.removeEventListener('resize', this.onResize);
     }
+  }
+
+  get defaultBotSettings() {
+    const { botDelay, botAvatar, botName } = this.props;
+    return {
+      delay: botDelay,
+      avatar: botAvatar,
+      botName
+    };
+  }
+
+  get defaultUserSettings() {
+    const { userDelay, userAvatar } = this.props;
+
+    return {
+      delay: userDelay,
+      avatar: userAvatar,
+      hideInput: false,
+      hideExtraControl: false
+    };
+  }
+
+  get defaultCustomSettings() {
+    const { customDelay } = this.props;
+
+    return { delay: customDelay };
   }
 
   onNodeInserted = event => {
@@ -437,14 +435,30 @@ class ChatBot extends Component {
     return !inputValue || inputValue.length === 0;
   };
 
+  getSettings = step => {
+    let settings = {};
+
+    if (step.user) {
+      settings = this.defaultUserSettings;
+    } else if (step.message || step.asMessage) {
+      settings = this.defaultBotSettings;
+    } else if (step.component) {
+      settings = this.defaultCustomSettings;
+    }
+
+    return settings;
+  };
+
   generateHistory = () => {
     // To reduce history size we:
     // 1 - Remove components
     // 2 - For static steps keep only id if not (user, component,)
     const { renderedSteps } = this.state;
+    console.log('BEFORE >>>>', renderedSteps);
 
     return renderedSteps.map(item => {
-      const nextItem = item;
+      const nextItem = { ...item };
+      const settings = this.getSettings(nextItem);
 
       if (nextItem.component) {
         nextItem.component = 'HISTORY';
@@ -454,14 +468,20 @@ class ChatBot extends Component {
         nextItem.validator = 'HISTORY';
       }
 
-      return item;
+      // We don't store in history settings which comes to component as props
+      Object.keys(settings).forEach(key => {
+        delete nextItem[key];
+      });
+
+      return nextItem;
     });
   };
 
   fromHistoryToSteps = history => {
     const { steps } = this.props;
     return history.map(item => {
-      const nextItem = item;
+      const nextItem = { ...item };
+      const settings = this.getSettings(nextItem);
 
       if (nextItem.component && nextItem.component === 'HISTORY') {
         nextItem.component = steps.find(step => step.id === nextItem.id).component;
@@ -470,6 +490,10 @@ class ChatBot extends Component {
       if (nextItem.validator && nextItem.validator === 'HISTORY') {
         nextItem.validator = steps.find(step => step.id === nextItem.id).validator;
       }
+
+      Object.entries(settings).forEach(([key, value]) => {
+        nextItem[key] = value;
+      });
 
       return nextItem;
     });
@@ -757,6 +781,9 @@ class ChatBot extends Component {
       editingStepId,
       editingStepText
     } = this.state;
+
+    console.log(JSON.stringify(this.generateHistory()), 'generateHistory');
+
     const {
       className,
       contentStyle,
