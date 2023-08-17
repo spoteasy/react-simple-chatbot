@@ -377,6 +377,7 @@ class ChatBot extends Component {
           renderedSteps.push(nextStep);
           previousSteps.push(nextStep);
 
+          onHistoryChange(this.generateHistory());
           this.setState({ renderedSteps, previousSteps });
         }
       });
