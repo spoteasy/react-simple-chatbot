@@ -66,6 +66,7 @@ class ChatBot extends Component {
   }
 
   componentDidMount() {
+    console.log('componentDidMount >>>');
     const { steps } = this.props;
     const { cache, cacheName, enableMobileAutoFocus, stepsHistory } = this.props;
     const chatSteps = {};
