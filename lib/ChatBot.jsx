@@ -128,16 +128,17 @@ class ChatBot extends Component {
     const historyPresent = stepsHistory && stepsHistory.length;
 
     if (historyPresent) {
+      // last step is current step
       const history = this.fromHistoryToSteps(stepsHistory);
-      const currentStepIndex = steps.findIndex(item => item.id === previousStep.id);
 
       this.setState({
-        currentStep: steps[currentStepIndex + 1],
+        currentStep: history[history.length - 1],
         defaultUserSettings: this.defaultUserSettings,
-        previousStep: history[history.length - 1],
-        previousSteps: history,
-        renderedSteps: history,
-        steps: chatSteps
+        previousStep: history[history.length - 2],
+        previousSteps: history.slice(0, history.length - 1),
+        renderedSteps: history.slice(0, history.length - 1),
+        steps: chatSteps,
+        disabled: false
       });
     } else {
       this.setState({
@@ -286,6 +287,7 @@ class ChatBot extends Component {
   };
 
   triggerNextStep = data => {
+    console.log('triggerNextStep HERE >>>');
     const { enableMobileAutoFocus } = this.props;
     const { defaultUserSettings, previousSteps, renderedSteps, steps, editingStepId } = this.state;
 
@@ -453,10 +455,9 @@ class ChatBot extends Component {
     // To reduce history size we:
     // 1 - Remove components
     // 2 - For static steps keep only id if not (user, component,)
-    const { renderedSteps } = this.state;
-    console.log('BEFORE >>>>', renderedSteps);
+    const { renderedSteps, currentStep } = this.state;
 
-    return renderedSteps.map(item => {
+    return [...renderedSteps, currentStep].map(item => {
       const nextItem = { ...item };
       const settings = this.getSettings(nextItem);
 
@@ -479,7 +480,7 @@ class ChatBot extends Component {
 
   fromHistoryToSteps = history => {
     const { steps } = this.props;
-    return history.map(item => {
+    return history.map((item, index) => {
       const nextItem = { ...item };
       const settings = this.getSettings(nextItem);
 
@@ -494,6 +495,10 @@ class ChatBot extends Component {
       Object.entries(settings).forEach(([key, value]) => {
         nextItem[key] = value;
       });
+
+      if (index < history.length - 1) {
+        nextItem.rendered = true;
+      }
 
       return nextItem;
     });
