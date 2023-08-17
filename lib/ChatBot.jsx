@@ -125,9 +125,7 @@ class ChatBot extends Component {
       }
     );
 
-    const historyPresent = stepsHistory && stepsHistory.length;
-
-    if (historyPresent) {
+    if (stepsHistory) {
       // last step is current step
       const history = this.fromHistoryToSteps(stepsHistory);
 
