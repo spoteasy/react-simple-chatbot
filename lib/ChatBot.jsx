@@ -132,8 +132,8 @@ class ChatBot extends Component {
       this.setState({
         currentStep: { ...history.currentStep, rendered: false },
         defaultUserSettings: this.defaultUserSettings,
-        previousStep: history.renderedSteps[history.renderedSteps.length - 2],
-        previousSteps: history.renderedSteps,
+        previousStep: history.previousStep,
+        previousSteps: history.previousSteps,
         renderedSteps: history.renderedSteps,
         steps: chatSteps,
         disabled: !history.currentStep.user
@@ -363,7 +363,7 @@ class ChatBot extends Component {
       previousStep = currentStep;
       currentStep = nextStep;
 
-      onHistoryChange(this.generateHistory());
+      onHistoryChange(this.generateHistory({ renderedSteps, currentStep, previousStep }));
       this.setState({ renderedSteps, currentStep, previousStep }, () => {
         if (nextStep.user) {
           this.setState({ disabled: false }, () => {
@@ -377,7 +377,13 @@ class ChatBot extends Component {
           renderedSteps.push(nextStep);
           previousSteps.push(nextStep);
 
-          onHistoryChange(this.generateHistory());
+          onHistoryChange(
+            this.generateHistory({
+              renderedSteps,
+              currentStep,
+              previousStep
+            })
+          );
           this.setState({ renderedSteps, previousSteps });
         }
       });
@@ -451,9 +457,7 @@ class ChatBot extends Component {
     return settings;
   };
 
-  generateHistory = steps => {
-    const { renderedSteps, currentStep } = this.state;
-
+  generateHistory = ({ renderedSteps, currentStep, previousStep }) => {
     const mapStep = item => {
       const nextItem = { ...item };
       const settings = this.getSettings(nextItem);
@@ -475,15 +479,16 @@ class ChatBot extends Component {
     };
 
     return {
-      renderedSteps: (steps || renderedSteps).map(mapStep),
-      currentStep: mapStep(currentStep)
+      renderedSteps: renderedSteps.map(mapStep),
+      currentStep: mapStep(currentStep),
+      previousStep: mapStep(previousStep)
     };
   };
 
   fromHistoryToSteps = (history = {}) => {
     const { steps } = this.props;
     const mapStep = item => {
-      const nextItem = { ...item };
+      let nextItem = { ...item };
       const settings = this.getSettings(nextItem);
 
       if (nextItem.component && nextItem.component === 'HISTORY') {
@@ -498,6 +503,7 @@ class ChatBot extends Component {
         nextItem[key] = value;
       });
 
+      nextItem = { ...settings, ...nextItem };
       nextItem.rendered = true;
 
       return nextItem;
@@ -505,7 +511,9 @@ class ChatBot extends Component {
 
     return {
       renderedSteps: history.renderedSteps.map(mapStep),
-      currentStep: mapStep(history.currentStep)
+      currentStep: mapStep(history.currentStep),
+      previousStep: mapStep(history.previousStep),
+      previousSteps: history.renderedSteps.map(mapStep)
     };
   };
 
@@ -677,7 +685,7 @@ class ChatBot extends Component {
 
   updateStep = (stepId, stepFields, stepValues) => {
     const { onHistoryChange } = this.props;
-    const { previousSteps, renderedSteps } = this.state;
+    const { previousSteps, renderedSteps, currentStep, previousStep } = this.state;
     const mapFn = item => {
       if (stepId === item.id) {
         const newObj = { ...item };
@@ -694,7 +702,7 @@ class ChatBot extends Component {
     const nextPreviousSteps = previousSteps.map(mapFn);
     const nextRenderedSteps = renderedSteps.map(mapFn);
 
-    onHistoryChange(this.generateHistory(nextRenderedSteps));
+    onHistoryChange(this.generateHistory({ renderedSteps, currentStep, previousStep }));
     this.setState({
       previousSteps: nextPreviousSteps,
       renderedSteps: nextRenderedSteps
