@@ -702,7 +702,7 @@ class ChatBot extends Component {
     const nextPreviousSteps = previousSteps.map(mapFn);
     const nextRenderedSteps = renderedSteps.map(mapFn);
 
-    onHistoryChange(this.generateHistory({ renderedSteps, currentStep, previousStep }));
+    onHistoryChange(this.generateHistory({ renderedSteps: nextRenderedSteps, currentStep, previousStep }));
     this.setState({
       previousSteps: nextPreviousSteps,
       renderedSteps: nextRenderedSteps
